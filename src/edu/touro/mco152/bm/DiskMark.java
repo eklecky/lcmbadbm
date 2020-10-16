@@ -3,7 +3,7 @@ package edu.touro.mco152.bm;
 import java.text.DecimalFormat;
 
 /**
- *
+ * DiskMark.java contains stable methods for the project Metrics.
  */
 public class DiskMark {
 

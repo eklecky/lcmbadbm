@@ -10,7 +10,7 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Utility methods for jDiskMark
+ * Utility.java contains necessary methods for OS communication and compliance
  */
 public class Util {
 
@@ -19,7 +19,7 @@ public class Util {
     /**
      * Deletes the Directory and all files within
      *
-     * @param path
+     * @param path passed from DiskWorker or MainFrame
      * @return
      */
     static public boolean deleteDirectory(File path) {
@@ -55,53 +55,6 @@ public class Util {
         // so add 1 to make it inclusive
 
         return rand.nextInt((max - min) + 1) + min;
-    }
-
-    /*
-     * Not used kept here for reference.
-     */
-    static public void readPhysicalDrive() throws IOException {
-        File diskRoot = new File("\\\\.\\PhysicalDrive0");
-        RandomAccessFile diskAccess = new RandomAccessFile(diskRoot, "r");
-        byte[] content = new byte[1024];
-        diskAccess.readFully(content);
-        System.out.println("done reading fully");
-        System.out.println("content " + Arrays.toString(content));
-    }
-
-    /*
-     * Not used kept here for reference.
-     */
-    public static void sysStats() {
-        /* Total number of processors or cores available to the JVM */
-        System.out.println("Available processors (cores): " +
-                Runtime.getRuntime().availableProcessors());
-
-        /* Total amount of free memory available to the JVM */
-        System.out.println("Free memory (bytes): " +
-                Runtime.getRuntime().freeMemory());
-
-        /* This will return Long.MAX_VALUE if there is no preset limit */
-        long maxMemory = Runtime.getRuntime().maxMemory();
-        /* Maximum amount of memory the JVM will attempt to use */
-        System.out.println("Maximum memory (bytes): " +
-                (maxMemory == Long.MAX_VALUE ? "no limit" : maxMemory));
-
-        /* Total memory currently available to the JVM */
-        System.out.println("Total memory available to JVM (bytes): " +
-                Runtime.getRuntime().totalMemory());
-
-        /* Get a list of all filesystem roots on this system */
-        File[] roots = File.listRoots();
-
-        /* For each filesystem root, print some info */
-        for (File root : roots) {
-            System.out.println("File system root: " + root.getAbsolutePath());
-            System.out.println("Total space (bytes): " + root.getTotalSpace());
-            System.out.println("Free space (bytes): " + root.getFreeSpace());
-            System.out.println("Usable space (bytes): " + root.getUsableSpace());
-            System.out.println("Drive Type: " + getDriveType(root));
-        }
     }
 
     public static String displayString(double num) {
@@ -146,76 +99,6 @@ public class Util {
             return Util.getModelFromLetter2(driveLetter);
         }
         return "OS not supported";
-    }
-
-    /**
-     * This method became obsolete with an updated version of windows 10.
-     * A newer version of the method is used.
-     * <p>
-     * Get the drive model description based on the windows drive letter.
-     * Uses the powershell script disk-model.ps1
-     * <p>
-     * This appears to be the output of the original ps script before the update:
-     * <p>
-     * d:\>powershell -ExecutionPolicy ByPass -File tmp.ps1
-     * <p>
-     * DiskSize    : 128034708480
-     * RawSize     : 117894545408
-     * FreeSpace   : 44036825088
-     * Disk        : \\.\PHYSICALDRIVE1
-     * DriveLetter : C:
-     * DiskModel   : SanDisk SD6SF1M128G
-     * VolumeName  : OS_Install
-     * Size        : 117894541312
-     * Partition   : Disk #1, Partition #2
-     * <p>
-     * DiskSize    : 320070320640
-     * RawSize     : 320070836224
-     * FreeSpace   : 29038071808
-     * Disk        : \\.\PHYSICALDRIVE2
-     * DriveLetter : E:
-     * DiskModel   : TOSHIBA External USB 3.0 USB Device
-     * VolumeName  : TOSHIBA EXT
-     * Size        : 320070832128
-     * Partition   : Disk #2, Partition #0
-     * <p>
-     * We should be able to modify the new parser to detect the
-     * output type and adjust parsing as needed.
-     *
-     * @param driveLetter The single character drive letter.
-     * @return Disk Drive Model description or empty string if not found.
-     */
-    @Deprecated
-    public static String getModelFromLetter(String driveLetter) {
-        try {
-            Process p = Runtime.getRuntime().exec("powershell -ExecutionPolicy ByPass -File disk-model.ps1");
-            p.waitFor();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
-            String line = reader.readLine();
-
-            String curDriveLetter = null;
-            String curDiskModel = null;
-            while (line != null) {
-                System.out.println(line);
-                if (line.trim().isEmpty()) {
-                    if (curDriveLetter != null && curDiskModel != null &&
-                            curDriveLetter.equalsIgnoreCase(driveLetter)) {
-                        return curDiskModel;
-                    }
-                }
-                if (line.contains("DriveLetter : ")) {
-                    curDriveLetter = line.split(" : ")[1].substring(0, 1);
-                    System.out.println("current letter=" + curDriveLetter);
-                }
-                if (line.contains("DiskModel   : ")) {
-                    curDiskModel = line.split(" : ")[1];
-                    System.out.println("current model=" + curDiskModel);
-                }
-                line = reader.readLine();
-            }
-        } catch (IOException | InterruptedException e) {
-        }
-        return null;
     }
 
     /**

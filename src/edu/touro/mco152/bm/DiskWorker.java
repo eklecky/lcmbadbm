@@ -11,7 +11,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.Date;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -37,15 +36,23 @@ import static edu.touro.mco152.bm.DiskMark.MarkType.WRITE;
  * Swing using an instance of the DiskMark class.
  */
 
-public class DiskWorker extends SwingWorker<Boolean, DiskMark> {
+public class DiskWorker{
 
-    @Override
+    UIBluePrint uiBluePrint;
+
+    public DiskWorker(UIBluePrint uiBluePrint){
+        this.uiBluePrint = uiBluePrint;
+    }
+
+
     protected Boolean doInBackground() throws Exception {
 
         /**
-         * We 'got here' because: a) End-user clicked 'Start' on the benchmark UI,
+         * We 'got here' because:
+         * a) End-user clicked 'Start' on the benchmark UI,
          * which triggered the start-benchmark event associated with the App::startBenchmark()
-         * method.  b) startBenchmark() then instantiated a DiskWorker, and called
+         * method.
+         * b) startBenchmark() then instantiated a DiskWorker, and called
          * its (super class's) execute() method, causing Swing to eventually
          * call this doInBackground() method.
          */
@@ -109,7 +116,7 @@ public class DiskWorker extends SwingWorker<Boolean, DiskMark> {
              * that keeps writing data (in its own loop - for specified # of blocks). Each 'Mark' is timed
              * and is reported to the GUI for display as each Mark completes.
              */
-            for (int m = startFileNum; m < startFileNum + App.numOfMarks && !isCancelled(); m++) {
+            for (int m = startFileNum; m < startFileNum + App.numOfMarks && !uiBluePrint.cancelled(); m++) {
 
                 if (App.multiFile) {
                     testFile = new File(dataDir.getAbsolutePath()
@@ -143,7 +150,7 @@ public class DiskWorker extends SwingWorker<Boolean, DiskMark> {
                             /**
                              * Report to GUI what percentage level of Entire BM (#Marks * #Blocks) is done.
                              */
-                            setProgress((int) percentComplete);
+                            uiBluePrint.provideProgress((int) percentComplete);
                         }
                     }
                 } catch (IOException ex) {
@@ -166,7 +173,7 @@ public class DiskWorker extends SwingWorker<Boolean, DiskMark> {
                 /**
                  * Let the GUI know the interim result described by the current Mark
                  */
-                publish(wMark);
+                uiBluePrint.newPublish(wMark);
 
                 // Keep track of statistics to be displayed and persisted after all Marks are done.
                 run.setRunMax(wMark.getCumMax());
@@ -193,7 +200,7 @@ public class DiskWorker extends SwingWorker<Boolean, DiskMark> {
          */
 
         // try renaming all files to clear catch
-        if (App.readTest && App.writeTest && !isCancelled()) {
+        if ( App.readTest && App.writeTest && !uiBluePrint.cancelled() ) {
             JOptionPane.showMessageDialog(Gui.mainFrame,
                     "For valid READ measurements please clear the disk cache by\n" +
                             "using the included RAMMap.exe or flushmem.exe utilities.\n" +
@@ -217,7 +224,7 @@ public class DiskWorker extends SwingWorker<Boolean, DiskMark> {
             Gui.chartPanel.getChart().getTitle().setVisible(true);
             Gui.chartPanel.getChart().getTitle().setText(run.getDiskInfo());
 
-            for (int m = startFileNum; m < startFileNum + App.numOfMarks && !isCancelled(); m++) {
+            for (int m = startFileNum; m < startFileNum + App.numOfMarks && !uiBluePrint.cancelled(); m++) {
 
                 if (App.multiFile) {
                     testFile = new File(dataDir.getAbsolutePath()
@@ -242,7 +249,7 @@ public class DiskWorker extends SwingWorker<Boolean, DiskMark> {
                             rUnitsComplete++;
                             unitsComplete = rUnitsComplete + wUnitsComplete;
                             percentComplete = (float) unitsComplete / (float) unitsTotal * 100f;
-                            setProgress((int) percentComplete);
+                            uiBluePrint.provideProgress((int) percentComplete);
                         }
                     }
                 } catch (FileNotFoundException ex) {
@@ -256,7 +263,7 @@ public class DiskWorker extends SwingWorker<Boolean, DiskMark> {
                 msg("m:" + m + " READ IO is " + rMark.getBwMbSec() + " MB/s    "
                         + "(MBread " + mbRead + " in " + sec + " sec)");
                 App.updateMetrics(rMark);
-                publish(rMark);
+                uiBluePrint.newPublish(rMark);
 
                 run.setRunMax(rMark.getCumMax());
                 run.setRunMin(rMark.getCumMin());
@@ -275,27 +282,5 @@ public class DiskWorker extends SwingWorker<Boolean, DiskMark> {
         return true;
     }
 
-    @Override
-    protected void process(List<DiskMark> markList) {
-        /**
-         * We are passed a list of one or more DiskMark objects that our thread has previously
-         * published to Swing. Watch Professor Cohen's video - Module_6_RefactorBadBM Swing_DiskWorker_Tutorial.mp4
-         */
-        markList.stream().forEach((dm) -> {
-            if (dm.type == DiskMark.MarkType.WRITE) {
-                Gui.addWriteMark(dm);
-            } else {
-                Gui.addReadMark(dm);
-            }
-        });
-    }
 
-    @Override
-    protected void done() {
-        if (App.autoRemoveData) {
-            Util.deleteDirectory(dataDir);
-        }
-        App.state = App.State.IDLE_STATE;
-        Gui.mainFrame.adjustSensitivity();
-    }
 }
