@@ -14,9 +14,7 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * Primary class for global variables and common methods.
- */
+
 public class App {
 
     public static final String APP_CACHE_DIR = System.getProperty("user.home") + File.separator + ".jDiskMark";
@@ -24,8 +22,6 @@ public class App {
     public static final String DATADIRNAME = "jDiskMarkData";
     public static final int MEGABYTE = 1024 * 1024;
     public static final int KILOBYTE = 1024;
-    public static final int IDLE_STATE = 0;
-    public static final int DISK_TEST_STATE = 1;
     public static State state = State.IDLE_STATE;
     public static Properties p;
     public static File locationDir = null;
@@ -96,7 +92,7 @@ public class App {
     }
 
     /**
-     * Initialize the GUI Application.
+     * Initialize GUI Application.
      */
     public static void init() {
         Gui.mainFrame = new MainFrame();
@@ -123,6 +119,9 @@ public class App {
         });
     }
 
+    /**
+     * Load properties for data presentation
+     */
     public static void loadConfig() {
         File pFile = new File(PROPERTIESFILE);
         if (!pFile.exists()) {
@@ -161,6 +160,9 @@ public class App {
         writeSyncEnable = Boolean.valueOf(value);
     }
 
+    /**
+     * Saves properties for data presentation
+     */
     public static void saveConfig() {
         p.setProperty("locationDir", App.locationDir.getAbsolutePath());
         p.setProperty("multiFile", String.valueOf(multiFile));
@@ -183,6 +185,9 @@ public class App {
         }
     }
 
+    /**
+     * Return data in StringBuilder sb
+     */
     public static String getConfigString() {
         StringBuilder sb = new StringBuilder();
         sb.append("Config for Java Disk Mark ").append(getVersion()).append('\n');
@@ -225,14 +230,14 @@ public class App {
             msg("worker is null abort...");
             return;
         }
-        worker.cancel(true);
+        worker.uiBluePrint.setCancel(true);
     }
 
     public static void startBenchmark() {
 
         //1. check that there isn't already a worker in progress
         if (state == State.DISK_TEST_STATE) {
-            //if (!worker.isCancelled() && !worker.isDone()) {
+            //if (!worker.cancelled() && !worker.isDone()) {
             msg("Test in progress, aborting...");
             return;
             //}
@@ -266,8 +271,10 @@ public class App {
         }
 
         //7. start disk worker thread
-        worker = new DiskWorker();
-        worker.addPropertyChangeListener((final PropertyChangeEvent event) -> {
+        DiskWorkerRunner workerRunner = new DiskWorkerRunner();
+        worker = new DiskWorker(workerRunner);
+
+        worker.uiBluePrint.newAddPropertyChangeListener((final PropertyChangeEvent event) -> {
             switch (event.getPropertyName()) {
                 case "progress":
                     int value = (Integer) event.getNewValue();
@@ -286,7 +293,15 @@ public class App {
                     break;
             }
         });
-        worker.execute();
+
+        try{
+            // Call to doInBackground in DiskWorker
+            worker.doInBackground();
+        }
+        catch(Exception e){
+            e.printStackTrace();
+        }
+
     }
 
     public static long targetMarkSizeKb() {
