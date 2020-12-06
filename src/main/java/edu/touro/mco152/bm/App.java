@@ -304,8 +304,14 @@ public class App {
 
     }
 
+    /**
+     * INTENTIONAL BUG
+     * As per hw, I 'broke' this method by adding 1 to the result
+     * the corresponding test 'targetMarkSizeKbTest()' in AppTest.java will now fail
+     * @return
+     */
     public static long targetMarkSizeKb() {
-        return blockSizeKb * numOfBlocks;
+        return blockSizeKb * numOfBlocks +1;
     }
 
     public static long targetTxSizeKb() {
