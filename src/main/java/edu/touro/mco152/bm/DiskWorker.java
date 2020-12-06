@@ -24,15 +24,20 @@ import static edu.touro.mco152.bm.App.*;
 
 public class DiskWorker{
 
-    UIBluePrint uiBluePrint;
+    static UIBluePrint uiBluePrint;
+    //DiskWorkerRunner diskWorkerRunner = new DiskWorkerRunner();
 
 
     public DiskWorker(UIBluePrint uiBluePrint){
         this.uiBluePrint = uiBluePrint;
     }
 
+    public void callExecute(){
+        uiBluePrint.NowExecute();
+    }
 
-    protected Boolean doInBackground() throws Exception {
+
+    public static Boolean decoupledDoInBackground() throws Exception {
 
         /**
          * We 'got here' because:
@@ -82,8 +87,9 @@ public class DiskWorker{
          * The GUI allows either a write, read, or both types of BMs to be started. They are done serially.
          */
         if (App.writeTest) {
-            DiskWorkerWrite diskWorkerWrite = new DiskWorkerWrite();
-            diskWorkerWrite.justWrite(uiBluePrint);
+            //DiskWorkerWrite diskWorkerWrite;
+            //diskWorkerWrite = new DiskWorkerWrite();
+            DiskWorkerWrite.justWrite(uiBluePrint);
 
         }
 
@@ -108,6 +114,7 @@ public class DiskWorker{
         // Same as above, just for Read operations instead of Writes.
         if (App.readTest) {
             DiskWorkerRead diskWorkerRead = new DiskWorkerRead();
+
             diskWorkerRead.justRead(uiBluePrint);
         }
 

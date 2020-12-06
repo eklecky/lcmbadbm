@@ -5,7 +5,6 @@ import edu.touro.mco152.bm.ui.Gui;
 import edu.touro.mco152.bm.ui.MainFrame;
 import edu.touro.mco152.bm.ui.SelectFrame;
 
-
 import javax.swing.SwingWorker.StateValue;
 import javax.swing.*;
 import javax.swing.UIManager.LookAndFeelInfo;
@@ -297,7 +296,7 @@ public class App {
 
         try{
             // Call to doInBackground in DiskWorker
-            worker.doInBackground();
+            worker.callExecute();
         }
         catch(Exception e){
             e.printStackTrace();

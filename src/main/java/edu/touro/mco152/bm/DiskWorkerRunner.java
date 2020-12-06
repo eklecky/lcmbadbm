@@ -41,8 +41,13 @@ public class DiskWorkerRunner extends SwingWorker<Boolean, DiskMark> implements 
     }
 
     @Override
-    protected Boolean doInBackground(){
-        return null;
+    public void NowExecute() {
+        execute();
+    }
+
+    @Override
+    public Boolean doInBackground() throws Exception {
+        return DiskWorker.decoupledDoInBackground();
     }
 
     @Override

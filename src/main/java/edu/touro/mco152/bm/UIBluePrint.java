@@ -3,6 +3,11 @@ package edu.touro.mco152.bm;
 
 import java.beans.PropertyChangeListener;
 
+/**
+ * Define the contract of a generic Interface uses to start and montior a benchmark
+ * Modeled after Swing Interface
+ */
+
 
 public interface UIBluePrint {
 
@@ -15,4 +20,8 @@ public interface UIBluePrint {
     boolean setCancel(boolean bool);
 
     void newAddPropertyChangeListener(PropertyChangeListener listener);
+
+    void NowExecute();
+
+
 }
