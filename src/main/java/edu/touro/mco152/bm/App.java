@@ -296,7 +296,7 @@ public class App {
 
         try{
             // Call to doInBackground in DiskWorker
-            worker.doInBackground();
+            worker.callExecute();
         }
         catch(Exception e){
             e.printStackTrace();
