@@ -47,6 +47,7 @@ public class DiskWorkerRunner extends SwingWorker<Boolean, DiskMark> implements 
 
     @Override
     public Boolean doInBackground() throws Exception {
+        System.out.println("Starting benchmark!");
         return DiskWorker.decoupledDoInBackground();
     }
 
