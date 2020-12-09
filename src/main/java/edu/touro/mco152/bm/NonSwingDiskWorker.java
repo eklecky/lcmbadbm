@@ -2,6 +2,11 @@ package edu.touro.mco152.bm;
 
 import java.beans.PropertyChangeListener;
 
+/**
+ * This class provides a Non-Swing ability to DiskWorker
+ * It is to be used mainly for JUnit tests
+ */
+
 public class NonSwingDiskWorker implements UIBluePrint{
 
     boolean isProgressComplete;
