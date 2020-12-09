@@ -10,6 +10,10 @@ import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * This class will test the Invoker and in turn the Read and Write commands using the Non-Swing compliant UI
+ */
+
 class BenchmarkInvokerTest {
     /**
      * Bruteforce setup of static classes/fields to allow DiskWorker to run.
