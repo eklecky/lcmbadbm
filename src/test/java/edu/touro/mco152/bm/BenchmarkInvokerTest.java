@@ -51,32 +51,28 @@ class BenchmarkInvokerTest {
     @Test
     void readCommandRun() {
         setupDefaultAsPerProperties();
-        var diskWorkerRunner = new DiskWorkerRunner();
+
+        NonSwingDiskWorker nonSwingDiskWorker = new NonSwingDiskWorker();
         BenchmarkInvoker benchmarkInvoker = new BenchmarkInvoker();
 
-        ICommand read = new DiskWorkerReadCommand(diskWorkerRunner, 50,
+        ICommand read = new DiskWorkerReadCommand(nonSwingDiskWorker, 50,
                 256, 128, DiskRun.BlockSequence.SEQUENTIAL);
         benchmarkInvoker.setCommand(read);
-
-        //TODO
-        //Make assertion
-        //assertTrue(benchmarkInvoker.run());
     }
 
 
     @Test
     void writeCommandRun() {
         setupDefaultAsPerProperties();
-        var diskWorkerRunner = new DiskWorkerRunner();
+
+        NonSwingDiskWorker nonSwingDiskWorker = new NonSwingDiskWorker();
         BenchmarkInvoker benchmarkInvoker = new BenchmarkInvoker();
 
-        ICommand write = new DiskWorkerWriteCommand(diskWorkerRunner, 25,
-                128, 2048, DiskRun.BlockSequence.SEQUENTIAL);
+        ICommand write = new DiskWorkerWriteCommand(nonSwingDiskWorker, 25,
+                128, 64, DiskRun.BlockSequence.SEQUENTIAL);
         benchmarkInvoker.setCommand(write);
         benchmarkInvoker.run();
 
-        //TODO
-        //Make assertion
-        //assertTrue(benchmarkInvoker.run());
+        assertTrue(nonSwingDiskWorker.isProgressComplete);
     }
 }
