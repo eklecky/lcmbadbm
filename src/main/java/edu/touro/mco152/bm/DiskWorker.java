@@ -7,25 +7,15 @@ import javax.swing.*;
 import static edu.touro.mco152.bm.App.*;
 
 /**
- * Run the disk benchmarking as a Swing-compliant thread (only one of these threads can run at
- * once.) Cooperates with Swing to provide and make use of interim and final progress and
- * information, which is also recorded as needed to the persistence store, and log.
- * <p>
- * Depends on static values that describe the benchmark to be done having been set in App and Gui classes.
- * The DiskRun class is used to keep track of and persist info about each benchmark at a higher level (a run),
- * while the DiskMark class described each iteration's result, which is displayed by the UI as the benchmark run
- * progresses.
- * <p>
- * This class only knows how to do 'read' or 'write' disk benchmarks. It is instantiated by the
- * startBenchmark() method.
- * <p>
-
+ * This class is the Invoker of the benchmarking commands created
+ * The class's constructor takes ICommands
  */
 
 public class DiskWorker{
 
+
     static UIBluePrint uiBluePrint;
-    //DiskWorkerRunner diskWorkerRunner = new DiskWorkerRunner();
+
 
 
     public DiskWorker(UIBluePrint uiBluePrint){
@@ -37,40 +27,22 @@ public class DiskWorker{
     }
 
 
-    public static Boolean decoupledDoInBackground() throws Exception {
+    /**
+     * We 'got here' because:
+     * a) End-user clicked 'Start' on the benchmark UI,
+     * which triggered the start-benchmark event associated with the App::startBenchmark()
+     * method.
+     * b) startBenchmark() then instantiated a DiskWorker, and called
+     * its (super class's) execute() method, causing Swing to eventually
+     * call this doInBackground() method.
+     */
+    protected static Boolean decoupledDoInBackground() throws Exception {
 
-        /**
-         * We 'got here' because:
-         * a) End-user clicked 'Start' on the benchmark UI,
-         * which triggered the start-benchmark event associated with the App::startBenchmark()
-         * method.
-         * b) startBenchmark() then instantiated a DiskWorker, and called
-         * its (super class's) execute() method, causing Swing to eventually
-         * call this doInBackground() method.
-         */
+
         System.out.println("*** starting new worker thread");
-        msg("Running readTest " + App.readTest + "   writeTest " + App.writeTest);
-        msg("num files: " + App.numOfMarks + ", num blks: " + App.numOfBlocks
-                + ", blk size (kb): " + App.blockSizeKb + ", blockSequence: " + App.blockSequence);
-
-        /**
-         * init local vars that keep track of benchmarks, and a large read/write buffer
-         */
-        int wUnitsComplete = 0, rUnitsComplete = 0, unitsComplete;
-        int wUnitsTotal = App.writeTest ? numOfBlocks * numOfMarks : 0;
-        int rUnitsTotal = App.readTest ? numOfBlocks * numOfMarks : 0;
-        int unitsTotal = wUnitsTotal + rUnitsTotal;
-        float percentComplete;
-
-        int blockSize = blockSizeKb * KILOBYTE;
-        byte[] blockArr = new byte[blockSize];
-        for (int b = 0; b < blockArr.length; b++) {
-            if (b % 2 == 0) {
-                blockArr[b] = (byte) 0xFF;
-            }
-        }
-
-        DiskMark wMark, rMark;  // declare vars that will point to objects used to pass progress to UI
+        msg("Running readTest " + readTest + "   writeTest " + writeTest);
+        msg("num files: " + numOfMarks + ", num blks: " + numOfBlocks
+                + ", blk size (kb): " + App.blockSizeKb + ", blockSequence: " + blockSequence);
 
 
 
@@ -81,18 +53,23 @@ public class DiskWorker{
             Gui.resetTestData();
         }
 
-        int startFileNum = App.nextMarkNumber;
+
+        BenchmarkInvoker benchmarkInvoker = new BenchmarkInvoker();
+
+        //Create read and write commands to be passed into invoker below
+        ICommand read = new DiskWorkerReadCommand(uiBluePrint, numOfMarks,
+                numOfBlocks, blockSizeKb, blockSequence);
+        ICommand write = new DiskWorkerWriteCommand(uiBluePrint, numOfMarks,
+                numOfBlocks, blockSizeKb, blockSequence);
+
 
         /**
          * The GUI allows either a write, read, or both types of BMs to be started. They are done serially.
          */
         if (App.writeTest) {
-            //DiskWorkerWrite diskWorkerWrite;
-            //diskWorkerWrite = new DiskWorkerWrite();
-            DiskWorkerWrite.justWrite(uiBluePrint);
-
+            benchmarkInvoker.setCommand(write);
+            benchmarkInvoker.run();
         }
-
 
         /**
          * Most benchmarking systems will try to do some cleanup in between 2 benchmark operations to
@@ -100,7 +77,7 @@ public class DiskWorker{
          * a memory benchmark might clear or invalidate the Op Systems TLB or other caches, etc.
          */
 
-        // try renaming all files to clear catch
+        // try renaming all files to clear cache
         if ( App.readTest && App.writeTest && !uiBluePrint.cancelled() ) {
             JOptionPane.showMessageDialog(Gui.mainFrame,
                     "For valid READ measurements please clear the disk cache by\n" +
@@ -113,14 +90,11 @@ public class DiskWorker{
 
         // Same as above, just for Read operations instead of Writes.
         if (App.readTest) {
-            DiskWorkerRead diskWorkerRead = new DiskWorkerRead();
-
-            diskWorkerRead.justRead(uiBluePrint);
+           benchmarkInvoker.setCommand(read);
+            benchmarkInvoker.run();
         }
 
-
-        App.nextMarkNumber += App.numOfMarks;
+        nextMarkNumber += numOfMarks;
         return true;
     }
-
 }

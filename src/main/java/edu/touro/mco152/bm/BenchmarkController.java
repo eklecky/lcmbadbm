@@ -13,41 +13,71 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static edu.touro.mco152.bm.App.*;
+import static edu.touro.mco152.bm.DiskMark.MarkType.READ;
 import static edu.touro.mco152.bm.DiskMark.MarkType.WRITE;
 
 /**
-*This class only knows how to do 'write' disk benchmarks. It is instantiated by the
-*startBenchmark() method in DiskWorker.
-**/
-public class DiskWorkerWrite {
+ * This class will be the 'receiver' in the Command Pattern Structure.
+ * Created Commands will call methods from here.
+ */
 
+public class BenchmarkController {
 
     /**
-     * The GUI allows a write. It is done serially.
+     * init local vars that keep track of benchmarks, and a large write buffer
      */
-    public static void justWrite(UIBluePrint uiBluePrint){
 
-        /**
-         * init local vars that keep track of benchmarks, and a large write buffer
-         */
+    UIBluePrint uiBluePrint;
 
-        int wUnitsComplete = 0,
-                rUnitsComplete = 0,
-                unitsComplete;
+    int wUnitsComplete = 0,
+            rUnitsComplete = 0,
+            unitsComplete;
 
-        int wUnitsTotal = App.writeTest ? numOfBlocks * numOfMarks : 0;
-        int rUnitsTotal = App.readTest ? numOfBlocks * numOfMarks : 0;
-        int unitsTotal = wUnitsTotal + rUnitsTotal;
-        float percentComplete;
+    int numOfMarks,
+        numOfBlocks,
+        blockSizeKb;
 
-        int blockSize = blockSizeKb * KILOBYTE;
-        byte[] blockArr = new byte[blockSize];
+    int wUnitsTotal,
+        rUnitsTotal,
+        unitsTotal;
+
+    int blockSize;
+    byte[] blockArr;
+
+    float percentComplete;
+    DiskRun.BlockSequence blockSequence;
+
+
+
+
+
+    public BenchmarkController(UIBluePrint uiBluePrint, int numOfMarks, int numOfBlocks,
+                               int blockSizeKb, DiskRun.BlockSequence blockSequence){
+
+        this.uiBluePrint = uiBluePrint;
+        this.numOfMarks = numOfMarks;
+        this.numOfBlocks = numOfBlocks;
+        this.blockSizeKb = blockSizeKb;
+        this.blockSequence = blockSequence;
+
+        wUnitsTotal = App.writeTest ? numOfBlocks * numOfMarks : 0;
+        rUnitsTotal = App.readTest ? numOfBlocks * numOfMarks : 0;
+        unitsTotal = wUnitsTotal + rUnitsTotal;
+
+        blockSize = blockSizeKb * KILOBYTE;
+        blockArr = new byte[blockSize];
+
+
         for (int b = 0; b < blockArr.length; b++) {
             if (b % 2 == 0) {
                 blockArr[b] = (byte) 0xFF;
             }
         }
 
+
+    }
+
+    public void write() {
 
         DiskMark wMark;
         int startFileNum = App.nextMarkNumber;
@@ -142,6 +172,88 @@ public class DiskWorkerWrite {
             run.setEndTime(new Date());
         } // END outer loop for specified duration (number of 'marks') for WRITE bench mark
 
+        persist(run);
+
+    }
+
+
+
+    public void read() {
+
+        /**
+         * The GUI allows a read, It is done serially.
+         */
+
+        DiskMark rMark;
+        int startFileNum = App.nextMarkNumber;
+
+        DiskRun run = new DiskRun(DiskRun.IOMode.READ, App.blockSequence);
+        run.setNumMarks(App.numOfMarks);
+        run.setNumBlocks(App.numOfBlocks);
+        run.setBlockSize(App.blockSizeKb);
+        run.setTxSize(App.targetTxSizeKb());
+        run.setDiskInfo(Util.getDiskInfo(dataDir));
+
+        msg("disk info: (" + run.getDiskInfo() + ")");
+
+        Gui.chartPanel.getChart().getTitle().setVisible(true);
+        Gui.chartPanel.getChart().getTitle().setText(run.getDiskInfo());
+
+        for (int m = startFileNum; m < startFileNum + App.numOfMarks && !uiBluePrint.cancelled(); m++) {
+
+            if (App.multiFile) {
+                testFile = new File(dataDir.getAbsolutePath()
+                        + File.separator + "testdata" + m + ".jdm");
+            }
+            rMark = new DiskMark(READ);
+            rMark.setMarkNum(m);
+            long startTime = System.nanoTime();
+            long totalBytesReadInMark = 0;
+
+            try (RandomAccessFile rAccFile = new RandomAccessFile(testFile, "r")) {
+                for (int b = 0; b < numOfBlocks; b++) {
+                    if (App.blockSequence == DiskRun.BlockSequence.RANDOM) {
+                        int rLoc = Util.randInt(0, numOfBlocks - 1);
+                        rAccFile.seek(rLoc * blockSize);
+                    } else {
+                        rAccFile.seek(b * blockSize);
+                    }
+                    rAccFile.readFully(blockArr, 0, blockSize);
+                    totalBytesReadInMark += blockSize;
+                    rUnitsComplete++;
+                    unitsComplete = rUnitsComplete + wUnitsComplete;
+                    percentComplete = (float) unitsComplete / (float) unitsTotal * 100f;
+                    uiBluePrint.provideProgress((int) percentComplete);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            long endTime = System.nanoTime();
+            long elapsedTimeNs = endTime - startTime;
+            double sec = (double) elapsedTimeNs / (double) 1000000000;
+            double mbRead = (double) totalBytesReadInMark / (double) MEGABYTE;
+            rMark.setBwMbSec(mbRead / sec);
+            msg("m:" + m + " READ IO is " + rMark.getBwMbSec() + " MB/s    "
+                    + "(MBread " + mbRead + " in " + sec + " sec)");
+            App.updateMetrics(rMark);
+            uiBluePrint.newPublish(rMark);
+
+            run.setRunMax(rMark.getCumMax());
+            run.setRunMin(rMark.getCumMin());
+            run.setRunAvg(rMark.getCumAvg());
+            run.setEndTime(new Date());
+        }
+
+        persist(run);
+
+    }
+
+
+    /**
+     * Turned this block of code into a method to clean up the class.
+     * @param run
+     */
+        public void persist(DiskRun run){
         /**
          * Persist info about the Write BM Run (e.g. into Derby Database) and add it to a GUI panel
          */
@@ -151,5 +263,6 @@ public class DiskWorkerWrite {
         em.getTransaction().commit();
 
         Gui.runPanel.addRun(run);
+
     }
 }
