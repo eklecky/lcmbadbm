@@ -59,9 +59,12 @@ class BenchmarkInvokerTest {
         NonSwingDiskWorker nonSwingDiskWorker = new NonSwingDiskWorker();
         BenchmarkInvoker benchmarkInvoker = new BenchmarkInvoker();
 
-        ICommand read = new DiskWorkerReadCommand(nonSwingDiskWorker, 50,
-                256, 128, DiskRun.BlockSequence.SEQUENTIAL);
+        ICommand read = new DiskWorkerReadCommand(nonSwingDiskWorker, 25,
+                128, 64, DiskRun.BlockSequence.SEQUENTIAL);
         benchmarkInvoker.setCommand(read);
+        benchmarkInvoker.run();
+
+        assertTrue(nonSwingDiskWorker.isProgressComplete);
     }
 
 
