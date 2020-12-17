@@ -1,10 +1,8 @@
 package edu.touro.mco152.bm;
 
 import edu.touro.mco152.bm.persist.DiskRun;
-import edu.touro.mco152.bm.persist.EM;
 import edu.touro.mco152.bm.ui.Gui;
 
-import javax.persistence.EntityManager;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -171,19 +169,13 @@ public class BenchmarkController {
             run.setRunAvg(wMark.getCumAvg());
             run.setEndTime(new Date());
         } // END outer loop for specified duration (number of 'marks') for WRITE bench mark
-
-        persist(run);
-
     }
 
 
-
+    /**
+     * The GUI allows a read, It is done serially.
+     */
     public void read() {
-
-        /**
-         * The GUI allows a read, It is done serially.
-         */
-
         DiskMark rMark;
         int startFileNum = App.nextMarkNumber;
 
@@ -243,26 +235,6 @@ public class BenchmarkController {
             run.setRunAvg(rMark.getCumAvg());
             run.setEndTime(new Date());
         }
-
-        persist(run);
-
-    }
-
-
-    /**
-     * Turned this block of code into a method to clean up the class.
-     * @param run
-     */
-        public void persist(DiskRun run){
-        /**
-         * Persist info about the Write BM Run (e.g. into Derby Database) and add it to a GUI panel
-         */
-        EntityManager em = EM.getEntityManager();
-        em.getTransaction().begin();
-        em.persist(run);
-        em.getTransaction().commit();
-
-        Gui.runPanel.addRun(run);
 
     }
 }
