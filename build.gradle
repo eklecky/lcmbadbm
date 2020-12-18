@@ -23,6 +23,9 @@ dependencies {
 
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
+    // slack support
+    implementation "com.slack.api:slack-api-client:1.0.7"
+
     testImplementation(platform('org.junit:junit-bom:5.7.0'))
     testImplementation('org.junit.jupiter:junit-jupiter')
     testCompile("org.junit.jupiter:junit-jupiter-params:5.7.0")
