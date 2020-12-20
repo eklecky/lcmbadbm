@@ -29,7 +29,8 @@ public class RulesObserver implements IObserver {
             {
                 SlackManager slackmgr = new SlackManager("BadBM");
                 // Boolean worked = slackmgr.postMsg2OurChannel(":cry: Benchmark failed");
-                Boolean worked = slackmgr.postMsg2OurChannel(":laugh: Benchmark completed");
+                Boolean worked = slackmgr.postMsg2OurChannel(":grimacing: The Benchmark's max time has exceeded" +
+                        " 3 percent of its average time.");
                 System.out.println("Retcode from test sending msg is " + worked);
             }
         }
