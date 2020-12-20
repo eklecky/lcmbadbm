@@ -34,8 +34,8 @@ public final class Gui implements IObserver {
     public static JProgressBar progressBar = null;
     public static RunPanel runPanel = null;
 
-    DiskRun runWrite = new DiskRun(DiskRun.IOMode.WRITE, App.blockSequence);
-    DiskRun runRead = new DiskRun(DiskRun.IOMode.READ, App.blockSequence);
+    public static DiskRun runWrite = new DiskRun(DiskRun.IOMode.WRITE, App.blockSequence);
+    public static DiskRun runRead = new DiskRun(DiskRun.IOMode.READ, App.blockSequence);
 
     DiskWorker diskWorker;
 
