@@ -2,6 +2,9 @@ package edu.touro.mco152.bm.ui;
 
 import edu.touro.mco152.bm.App;
 import edu.touro.mco152.bm.DiskMark;
+import edu.touro.mco152.bm.DiskWorker;
+import edu.touro.mco152.bm.IObserver;
+import edu.touro.mco152.bm.persist.DiskRun;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -17,8 +20,10 @@ import java.text.NumberFormat;
 
 /**
  * Store gui references for easy access
+ *
+ * This class has been refactored to be an 'Observer' class. It now has 'IObserver''s update method
  */
-public final class Gui {
+public final class Gui implements IObserver {
 
     public static ChartPanel chartPanel = null;
     public static MainFrame mainFrame = null;
@@ -28,6 +33,16 @@ public final class Gui {
     public static JFreeChart chart;
     public static JProgressBar progressBar = null;
     public static RunPanel runPanel = null;
+
+    public static DiskRun runWrite = new DiskRun(DiskRun.IOMode.WRITE, App.blockSequence);
+    public static DiskRun runRead = new DiskRun(DiskRun.IOMode.READ, App.blockSequence);
+
+    DiskWorker diskWorker;
+
+    public Gui(DiskWorker diskWorker){
+        this.diskWorker = diskWorker;
+        this.diskWorker.registerObserver(this);
+    }
 
     public static ChartPanel createChartPanel() {
 
@@ -136,5 +151,15 @@ public final class Gui {
         chart.getXYPlot().getRenderer().setSeriesVisibleInLegend(5, App.readTest);
         chart.getXYPlot().getRenderer().setSeriesVisibleInLegend(6, App.readTest && App.showMaxMin);
         chart.getXYPlot().getRenderer().setSeriesVisibleInLegend(7, App.readTest && App.showMaxMin);
+    }
+
+    @Override
+    public void update() {
+        if (App.writeTest) {
+            runPanel.addRun(runWrite);
+        }
+        if (App.readTest) {
+            runPanel.addRun(runRead);
+        }
     }
 }

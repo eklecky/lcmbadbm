@@ -1,24 +1,28 @@
 package edu.touro.mco152.bm;
 
+import edu.touro.mco152.bm.persist.DiskRun;
 import edu.touro.mco152.bm.ui.Gui;
 
 import javax.swing.*;
+import java.util.ArrayList;
 
 import static edu.touro.mco152.bm.App.*;
 
 /**
- * This class is the Invoker of the benchmarking commands created
+ * This class has been modified to be Invoker of the benchmarking commands created.
  * The class's constructor takes ICommands
+ *
+ * Additionally, following the Observer Design Pattern, this class is now a 'Subject'/'Observable' which
+ * when appropriate, 'notifies' its 'Observers' that something has changed.
  */
 
-public class DiskWorker{
+public class DiskWorker implements IObservable{
 
 
-    static UIBluePrint uiBluePrint;
+     UIBluePrint uiBluePrint;
 
 
-
-    public DiskWorker(UIBluePrint uiBluePrint){
+    public  DiskWorker(UIBluePrint uiBluePrint){
         this.uiBluePrint = uiBluePrint;
     }
 
@@ -26,6 +30,7 @@ public class DiskWorker{
         uiBluePrint.NowExecute();
     }
 
+    DiskRun run;
 
     /**
      * We 'got here' because:
@@ -36,7 +41,7 @@ public class DiskWorker{
      * its (super class's) execute() method, causing Swing to eventually
      * call this doInBackground() method.
      */
-    protected static Boolean decoupledDoInBackground() throws Exception {
+    public  Boolean decoupledDoInBackground() throws Exception {
 
 
         System.out.println("*** starting new worker thread");
@@ -69,6 +74,8 @@ public class DiskWorker{
         if (App.writeTest) {
             benchmarkInvoker.setCommand(write);
             benchmarkInvoker.run();
+
+            notifyObservers();
         }
 
         /**
@@ -92,9 +99,35 @@ public class DiskWorker{
         if (App.readTest) {
            benchmarkInvoker.setCommand(read);
             benchmarkInvoker.run();
+
+            notifyObservers();
         }
 
         nextMarkNumber += numOfMarks;
+
         return true;
+    }
+
+
+    //initialize an arrayList of type IObserver to be used in the 'addObserver', 'removeObserver'
+    // and 'notifyObservers' methods
+     ArrayList<IObserver> observers = new ArrayList<IObserver>();
+
+    @Override
+    public void registerObserver(IObserver iObserver) {
+        observers.add(iObserver);
+    }
+
+    @Override
+    public void removeObserver(IObserver iObserver) {
+        observers.remove(iObserver);
+    }
+
+    @Override
+    public void notifyObservers() {
+        for (IObserver io : observers)
+        {
+            io.update();
+        }
     }
 }

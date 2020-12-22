@@ -2,6 +2,7 @@ package edu.touro.mco152.bm;
 
 import edu.touro.mco152.bm.ui.Gui;
 
+
 import javax.swing.*;
 import java.beans.PropertyChangeListener;
 import java.util.List;
@@ -9,6 +10,9 @@ import java.util.List;
 import static edu.touro.mco152.bm.App.dataDir;
 
 public class DiskWorkerRunner extends SwingWorker<Boolean, DiskMark> implements UIBluePrint {
+
+
+    DiskWorker dw = new DiskWorker(this);
 
 
     @Override
@@ -47,8 +51,9 @@ public class DiskWorkerRunner extends SwingWorker<Boolean, DiskMark> implements 
 
     @Override
     public Boolean doInBackground() throws Exception {
+
         System.out.println("Starting benchmark!");
-        return DiskWorker.decoupledDoInBackground();
+        return dw.decoupledDoInBackground();
     }
 
     @Override
