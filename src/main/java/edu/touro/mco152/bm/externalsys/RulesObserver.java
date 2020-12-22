@@ -22,7 +22,7 @@ public class RulesObserver implements IObserver {
 
         if (App.readTest){
             // Read benchmark result has an iteration 'max time' that exceeds
-            // 3 per cent of the benchmarks's average time
+            // 3 per cent of the benchmarks's average time as per assignment
             if (Gui.runRead.getRunMax() > (Gui.runRead.getRunAvg() * 0.3))
             {
                 SlackManager slackmgr = new SlackManager("BadBM");
