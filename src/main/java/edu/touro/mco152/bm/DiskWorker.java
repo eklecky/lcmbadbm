@@ -127,7 +127,7 @@ public class DiskWorker implements IObservable{
     public void notifyObservers() {
         for (IObserver io : observers)
         {
-            io.update();
+            io.update(run);
         }
     }
 }
