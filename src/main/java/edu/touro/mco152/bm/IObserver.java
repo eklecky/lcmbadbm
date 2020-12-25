@@ -1,5 +1,7 @@
 package edu.touro.mco152.bm;
 
+import edu.touro.mco152.bm.persist.DiskRun;
+
 /**
  * This interface is the 'Observer' interface that all concrete observers (for example Gui.java) will implement.
  *
@@ -7,5 +9,5 @@ package edu.touro.mco152.bm;
  */
 public  interface IObserver {
 
-    void update();
+    void update(DiskRun diskRun);
 }
