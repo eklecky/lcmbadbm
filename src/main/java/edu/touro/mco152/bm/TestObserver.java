@@ -1,5 +1,7 @@
 package edu.touro.mco152.bm;
 
+import edu.touro.mco152.bm.persist.DiskRun;
+
 /**
  * This class is an 'Observer' used purely for JUnit testing.
  */
@@ -14,7 +16,7 @@ public class TestObserver implements IObserver {
 
     boolean flag = false;
     @Override
-    public void update() {
+    public void update(DiskRun diskRun) {
         flag = true;
     }
 }
