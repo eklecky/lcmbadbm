@@ -24,7 +24,7 @@ public class DatabasePersistenceObserver implements IObserver {
     }
 
     @Override
-    public void update() {
+    public void update(DiskRun diskRun) {
 
         /**
          * Persist info about the Write BM Run (e.g. into Derby Database) and add it to a GUI panel.
@@ -32,18 +32,9 @@ public class DatabasePersistenceObserver implements IObserver {
          * This block of code was take out of 'BenchmarkController' and placed here in order to use the Observer Design
          * Pattern to do database persistence.
          */
-
-        if (App.writeTest) {
             EntityManager em = EM.getEntityManager();
             em.getTransaction().begin();
-            em.persist(runWrite);
+            em.persist(diskRun);
             em.getTransaction().commit();
-        }
-        if (App.readTest) {
-            EntityManager em = EM.getEntityManager();
-            em.getTransaction().begin();
-            em.persist(runRead);
-            em.getTransaction().commit();
-        }
     }
 }

@@ -154,12 +154,8 @@ public final class Gui implements IObserver {
     }
 
     @Override
-    public void update() {
-        if (App.writeTest) {
-            runPanel.addRun(runWrite);
-        }
-        if (App.readTest) {
-            runPanel.addRun(runRead);
-        }
+    public void update(DiskRun diskRun) {
+
+        runPanel.addRun(diskRun);
     }
 }
